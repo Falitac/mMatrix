@@ -11,6 +11,8 @@ typedef struct Matrix {
 Matrix* mCreate(size_t rows, size_t cols);
 void mFree(Matrix* matrix);
 Matrix* mCopy(Matrix* matrix);
+void mFill(Matrix* mat, float val);
+void mGenerate(Matrix* mat, float (*generator)(Matrix* mat, int i, int j));
 
 float* mRow(Matrix* mat, size_t index);
 
@@ -21,3 +23,9 @@ Matrix* mCreateTranspose(Matrix* mat);
 void mScale(Matrix* mat, float scalar);
 void mAdd(Matrix* a, Matrix* b);
 Matrix* mMul(Matrix* a, Matrix* b);
+
+Matrix* mCreateMinor(Matrix* mat, int index1, int index2);
+float mDet(Matrix* mat);
+
+void mRedRows(Matrix* mat);
+float mFactorDiagonal(Matrix* mat);
