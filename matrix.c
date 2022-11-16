@@ -79,7 +79,16 @@ void mScale(Matrix* mat, float scalar) {
     }
 }
 
-Matrix* mMultiply(Matrix* a, Matrix* b) {
+void mAdd(Matrix* a, Matrix* b) {
+    assert(a->cols == b->cols && a->rows == b->cols);
+    for(int i = 0; i < a->rows; i++) {
+        for(int j = 0; j < a->cols; j++) {
+            mRow(a, i)[j] += mRow(b, i)[j];
+        }
+    }
+}
+
+Matrix* mMul(Matrix* a, Matrix* b) {
     assert(a->cols == b->rows);
     Matrix* result = mAlloc(a->rows, b->cols);
     mFill(result, 0.f);

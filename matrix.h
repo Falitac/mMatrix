@@ -19,5 +19,5 @@ void mPrint(Matrix* mat);
 void mTranspose(Matrix* mat);
 Matrix* mCreateTranspose(Matrix* mat);
 void mScale(Matrix* mat, float scalar);
-Matrix* mAdd(Matrix* a, Matrix* b);
-Matrix* mMultiply(Matrix* a, Matrix* b);
+void mAdd(Matrix* a, Matrix* b);
+Matrix* mMul(Matrix* a, Matrix* b);

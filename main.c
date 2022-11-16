@@ -11,8 +11,9 @@ int main(int argc, char** argv) {
     mPrint(m);
     Matrix* n = mCreateTranspose(m);
     mPrint(n);
-    Matrix* out = mMultiply(m, n);
+    Matrix* out = mMul(m, n);
     mScale(out, 0.25);
+    mAdd(out, out);
     mPrint(out);
 
     mFree(out);
