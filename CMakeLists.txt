@@ -4,7 +4,10 @@ project(SVD C)
 include(CTest)
 enable_testing()
 
-add_executable(SVD main.c)
+add_executable(SVD
+    main.c
+    matrix.c
+)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
