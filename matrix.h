@@ -19,12 +19,12 @@ float* mRow(Matrix* mat, size_t index);
 
 void mPrint(Matrix* mat);
 
-void mTranspose(Matrix* mat);
+void mTranspose(Matrix** mat);
 Matrix* mCreateTranspose(Matrix* mat);
 void mScale(Matrix* mat, float scalar);
 void mAdd(Matrix* a, Matrix* b);
 Matrix* mMul(Matrix* a, Matrix* b);
-void mMulFirst(Matrix* a, Matrix* b);
+void mMulFirst(Matrix** a, Matrix* b);
 
 Matrix* mCreateMinor(Matrix* mat, int index1, int index2);
 float mDet(Matrix* mat);

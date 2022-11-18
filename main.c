@@ -19,32 +19,26 @@ Matrix* findEigen(Matrix* mat) {
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-    Matrix* a = mLoadFromFile("../in2.txt");
-    Matrix* v = mCreate(2, 1);
-    mFill(v, 1.);
-
-    mRow(v, 0)[0] = randUniform(-1.f, 1.f);
-    mRow(v, 1)[0] = randUniform(-1.f, 1.f);
-    //mRow(v, 2)[0] = randUniform(-1.f, 1.f);
+    Matrix* a = mLoadFromFile("../trans.txt");
+    Matrix* v = mLoadFromFile("../in2v.txt");
     mNormalize(v);
 
-    Matrix* at = mCreateTranspose(a);
 
     puts("A:");
     mPrint(a);
 
+    Matrix* at = mCreateTranspose(a);
     puts("At:");
     mPrint(at);
 
-    mMulFirst(a, at);
-    mFree(at);
+    Matrix* aat = mMul(a, at);
 
     puts("A*At:");
-    mPrint(a);
+    mPrint(aat);
     mPrint(v);
 
     for(int i = 0; i < 20; i++) {
-        Matrix* v1 = mMul(a, v);
+        Matrix* v1 = mMul(aat, v);
         mFree(v);
         v = v1;
         v1 = NULL;

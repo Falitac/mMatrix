@@ -105,23 +105,22 @@ void mPrint(Matrix* mat) {
     }
 }
 
-void mTranspose(Matrix* mat) {
+void mTranspose(Matrix** mat) {
     if(!mat) return;
-    size_t tmp = mat->rows;
-    mat->rows = mat->cols;
-    mat->cols = tmp;
-    for(int i = 0; i < mat->rows; i++) {
-        for(int j = i + 1; j < mat->cols; j++) {
-            float tmp = mRow(mat, i)[j];
-            mRow(mat, i)[j] = mRow(mat, j)[i];
-            mRow(mat, j)[i] = tmp;
-        }
-    }
+    Matrix* result = mCreateTranspose(*mat);
+    mFree(*mat);
+    *mat = result;
 }
 
 Matrix* mCreateTranspose(Matrix* mat) {
-    Matrix* result = mCopy(mat);
-    mTranspose(result);
+    if(!mat) return NULL;
+    Matrix* result = mAlloc(mat->cols, mat->rows);
+
+    for(int i = 0; i < result->rows; i++) {
+        for(int j = 0; j < result->cols; j++) {
+            mRow(result, i)[j] = mRow(mat, j)[i];
+        }
+    }
     return result;
 }
 
@@ -148,7 +147,7 @@ Matrix* mMul(Matrix* a, Matrix* b) {
     mFill(result, 0.f);
     for(int i = 0; i < result->rows; i++) {
         for(int j = 0; j < result->cols; j++) {
-            for(int k = 0; k < a->rows; k++) {
+            for(int k = 0; k < a->cols; k++) {
                 mRow(result, i)[j] += mRow(a, i)[k] * mRow(b, k)[j];
             }
         }
@@ -158,10 +157,10 @@ Matrix* mMul(Matrix* a, Matrix* b) {
 }
 
 /* TODO: This is temporary solution, looking for better one*/
-void mMulFirst(Matrix* a, Matrix* b) {
-    Matrix* result = mMul(a, b);
-    mFree(a);
-    *a = *result;
+void mMulFirst(Matrix** a, Matrix* b) {
+    Matrix* result = mMul(*a, b);
+    mFree(*a);
+    *a = result;
 }
 
 Matrix* mCreateMinor(Matrix* mat, int index1, int index2) {
