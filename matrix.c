@@ -288,6 +288,55 @@ void mNormalize(Matrix* vec) {
     mScale(vec, 1 / accum);
 }
 
+float mCalcMaxEigenSymm(Matrix* mat) {
+    Matrix* result = mAlloc(mat->rows, 1);
+    mFill(result, 1.);
+
+    Matrix* v = mMul(mat, result);
+    float prevScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
+    for(int i = 0; i < 20; i++) {
+        Matrix* vTmp = mMul(mat, v);
+        mFree(result);
+        result = v;
+        v = vTmp;
+
+        float resultScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
+        if(fabs(resultScalar - prevScalar) < 1e-7) {
+            printf("Stop at %d\n", i);
+            break;
+        }
+        prevScalar = resultScalar;
+    }
+    mFree(v);
+    mFree(result);
+    return prevScalar;
+}
+
+Matrix* mCalcEigVecSymm(Matrix* mat, float maxEig) {
+    assert(mat->rows == mat->cols);
+    Matrix* mat2 = mCopy(mat);
+    for(int i = 0; i < mat2->rows; i++) {
+        mRow(mat2, i)[i] -= maxEig;
+    }
+
+    for(int i = 0; i < mat2->rows; i++) {
+        float diag = mRow(mat2, i)[i];
+        for(int j = i; j < mat2->cols; j++) {
+            mRow(mat2, i)[j] /= diag;
+        }
+        for(int j = i + 1; j < mat2->rows; j++) {
+            float coeff = mRow(mat2, j)[i];
+            for(int k = 0; k < mat->cols; k++) {
+                mRow(mat2, j)[k] -= coeff * mRow(mat2, i)[k];
+            }
+        }
+    }
+    mPrint(mat2);
+    
+    Matrix* result = mAlloc(mat->rows, 1);
+    return result;
+}
+
 Matrix* mCalcEigVecSymmetric(Matrix* mat) {
     Matrix* v = mCreate(mat->rows, 1);
     for(int i = 0; i < mat->cols; i++) {
@@ -342,18 +391,17 @@ Matrix* mCalcEigensSymmetric3(Matrix* mat) {
     float r = mDet(B) / 2.;
     mFree(B);
 
-    float phi = acos(r) / 3;
+    float phi = acos(r) / 3.;
     if(r <= -1.) {
-        phi = M_PI / 3;
+        phi = M_PI / 3.;
     } else if(r >= 1.) {
         phi = 0.;
     }
 
-    float eig1 = mRow(eigens, 0)[0] = q + 2 * p * cos(phi);
-    float eig3 = mRow(eigens, 2)[2] = q + 2 * p * cos(phi + (2 * M_PI / 3.));
-    mRow(eigens, 1)[1] = 3 * q - eig1 - eig3;
+    float eig1 = mRow(eigens, 0)[0] = q + 2. * p * cos(phi);
+    float eig3 = mRow(eigens, 2)[0] = q + 2. * p * cos(phi + (2. * M_PI / 3.));
+    mRow(eigens, 1)[0] = 3 * q - eig1 - eig3;
 
-    // sort
     if(mRow(eigens, 0)[0] < mRow(eigens, 1)[0]) {
         swap(&mRow(eigens, 0)[0], &mRow(eigens, 1)[1]);
     }

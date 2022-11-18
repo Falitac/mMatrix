@@ -40,6 +40,10 @@ float mTrace(Matrix* mat);
 float mDot(Matrix* vec1, Matrix* vec2);
 void mNormalize(Matrix* vec);
 
+float mCalcMaxEigenSymm(Matrix* mat);
+Matrix* mCalcEigVecSymm(Matrix* mat, float maxEig);
+
+
 Matrix* mCalcEigVecSymmetric(Matrix* mat);
 Matrix* mCalcEigensSymmetric3(Matrix* mat);
 

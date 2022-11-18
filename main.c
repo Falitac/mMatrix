@@ -19,8 +19,7 @@ Matrix* findEigen(Matrix* mat) {
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-    Matrix* a = mLoadFromFile("../in3.txt");
-
+    Matrix* a = mLoadFromFile("../in4.txt");
 
     puts("A:");
     mPrint(a);
@@ -41,19 +40,21 @@ int main(int argc, char** argv) {
     puts("Eigens:");
     mPrint(eig);
 
-    Matrix* first = mCopy(aat);
-    Matrix* second = mIdentity(aat->rows);
-    mScale(second, -mRow(eig, 0)[0]);
-    mAdd(first, second);
+    
+    float maxEig = mCalcMaxEigenSymm(aat);
+    printf("Max Eig: %g\n", maxEig);
+    mCalcEigVecSymm(aat, maxEig);
 
-    puts("second:");
-    mPrint(second);
-    puts("diff:");
-    mPrint(first);
+    // Matrix* first = mCopy(aat);
+    // Matrix* second = mIdentity(aat->rows);
+    // mScale(second, -mRow(eig, 0)[0]);
+    // mAdd(first, second);
 
-    Matrix* ve = mCalcEigensSymmetric3(first);
-    puts("V1:");
-    mPrint(ve);
+    // puts("second:");
+    // mPrint(second);
+    // puts("diff:");
+    // mPrint(first);
+
 
     return 0;
 }
