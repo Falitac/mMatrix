@@ -19,9 +19,7 @@ Matrix* findEigen(Matrix* mat) {
 
 int main(int argc, char** argv) {
     srand(time(NULL));
-    Matrix* a = mLoadFromFile("../trans.txt");
-    Matrix* v = mLoadFromFile("../in2v.txt");
-    mNormalize(v);
+    Matrix* a = mLoadFromFile("../in3.txt");
 
 
     puts("A:");
@@ -31,22 +29,31 @@ int main(int argc, char** argv) {
     puts("At:");
     mPrint(at);
 
+    Matrix* ata = mMul(at, a);
     Matrix* aat = mMul(a, at);
 
+    puts("At*A:");
+    mPrint(ata);
     puts("A*At:");
     mPrint(aat);
-    mPrint(v);
 
-    for(int i = 0; i < 20; i++) {
-        Matrix* v1 = mMul(aat, v);
-        mFree(v);
-        v = v1;
-        v1 = NULL;
+    Matrix* eig = mCalcEigensSymmetric3(aat);
+    puts("Eigens:");
+    mPrint(eig);
 
-        mNormalize(v);
-    }
-    puts("V:");
-    mPrint(v);
+    Matrix* first = mCopy(aat);
+    Matrix* second = mIdentity(aat->rows);
+    mScale(second, -mRow(eig, 0)[0]);
+    mAdd(first, second);
+
+    puts("second:");
+    mPrint(second);
+    puts("diff:");
+    mPrint(first);
+
+    Matrix* ve = mCalcEigensSymmetric3(first);
+    puts("V1:");
+    mPrint(ve);
 
     return 0;
 }

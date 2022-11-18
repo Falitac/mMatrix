@@ -4,6 +4,12 @@
 #include <assert.h>
 #include <math.h>
 
+static void swap(float *xp, float *yp) {
+    float temp = *xp;
+    *xp = *yp;
+    *yp = temp;
+}
+ 
 static Matrix* mAlloc(size_t rows, size_t cols) {
     if(rows == 0 || cols == 0) {
         return NULL;
@@ -25,6 +31,15 @@ static Matrix* mAlloc(size_t rows, size_t cols) {
 
 Matrix* mCreate(size_t rows, size_t cols) {
     Matrix* result = mAlloc(rows, cols);
+    mFill(result, 0.);
+    return result;
+}
+
+Matrix* mIdentity(size_t size) {
+    Matrix* result = mCreate(size, size);
+    for(size_t i = 0; i < size; i++) {
+        mRow(result, i)[i] = 1.;
+    }
     return result;
 }
 
@@ -103,6 +118,17 @@ void mPrint(Matrix* mat) {
         }
         puts("");
     }
+}
+
+int mIsClose(Matrix* m1, Matrix* m2) {
+    assert(m1->cols == m2->cols && m1->rows == m2->rows);
+    const float EPS = 1e-7;
+    for(int i = 0; i < m1->cols * m1->cols; i++) {
+        if(fabs(m1->data[i] - m2->data[i]) > EPS) {
+            return 0;
+        }
+    }
+    return 1;
 }
 
 void mTranspose(Matrix** mat) {
@@ -237,6 +263,16 @@ float mDiagonalProduct(Matrix* mat) {
     return result;
 }
 
+float mTrace(Matrix* mat) {
+    float result = 0.f;
+
+    int lower = mat->rows < mat->cols ?  mat->rows : mat->cols;
+    for(int i = 0; i < lower; i++) {
+        result += mRow(mat, i)[i];
+    }
+    return result;
+}
+
 float mDot(Matrix* vec1, Matrix* vec2) {
     assert(vec1->rows == vec2->rows && vec1->cols == vec2->cols);
     float accum = 0.f;
@@ -250,4 +286,92 @@ void mNormalize(Matrix* vec) {
     assert(vec->cols == 1);
     float accum = sqrt(mDot(vec, vec));
     mScale(vec, 1 / accum);
+}
+
+Matrix* mCalcEigVecSymmetric(Matrix* mat) {
+    Matrix* v = mCreate(mat->rows, 1);
+    for(int i = 0; i < mat->cols; i++) {
+        mRow(v, i)[0] = 1.;
+    }
+    mNormalize(v);
+    Matrix* v1 = NULL;
+    for(;;) {
+        v1 = mMul(mat, v);
+        mNormalize(v1);
+        if(mIsClose(v1, v)) {
+            break;
+        }
+        mFree(v);
+        v = v1;
+
+        mNormalize(v);
+    }
+    mFree(v1);
+
+    return v;
+}
+
+Matrix* mCalcEigensSymmetric3(Matrix* mat) {
+    assert(mat->rows == mat->cols && mat->rows == 3);
+    
+    Matrix* eigens = mAlloc(3, 1);
+
+    float p1 = mRow(mat, 0)[1] * mRow(mat, 0)[1]
+        + mRow(mat, 0)[2] * mRow(mat, 0)[2]
+        + mRow(mat, 1)[2] * mRow(mat, 1)[2];
+    if( p1 < 1e-7) {
+        mRow(eigens, 0)[0] = mRow(mat, 0)[0];
+        mRow(eigens, 1)[1] = mRow(mat, 1)[1];
+        mRow(eigens, 2)[2] = mRow(mat, 2)[2];
+        return eigens;
+    }
+    float q = mTrace(mat) / 3.;
+
+    float x1 = mRow(mat, 0)[0] - q;
+    float x2 = mRow(mat, 1)[1] - q;
+    float x3 = mRow(mat, 2)[2] - q;
+
+    float p2 = x1*x1 + x2*x2 + x3*x3 + 2 * p1; 
+    float p = sqrt(p2 / 6.);
+
+    Matrix* B = mCopy(mat);
+    for(int i = 0; i < 3; i++) {
+        mRow(B, i)[i] -= q;
+    }
+    mScale(B, 1. / p);
+    float r = mDet(B) / 2.;
+    mFree(B);
+
+    float phi = acos(r) / 3;
+    if(r <= -1.) {
+        phi = M_PI / 3;
+    } else if(r >= 1.) {
+        phi = 0.;
+    }
+
+    float eig1 = mRow(eigens, 0)[0] = q + 2 * p * cos(phi);
+    float eig3 = mRow(eigens, 2)[2] = q + 2 * p * cos(phi + (2 * M_PI / 3.));
+    mRow(eigens, 1)[1] = 3 * q - eig1 - eig3;
+
+    // sort
+    if(mRow(eigens, 0)[0] < mRow(eigens, 1)[0]) {
+        swap(&mRow(eigens, 0)[0], &mRow(eigens, 1)[1]);
+    }
+    if(mRow(eigens, 1)[0] < mRow(eigens, 2)[0]) {
+        swap(&mRow(eigens, 1)[0], &mRow(eigens, 2)[0]);
+    }
+    if(mRow(eigens, 0)[0] < mRow(eigens, 1)[0]) {
+        swap(&mRow(eigens, 0)[0], &mRow(eigens, 1)[1]);
+    }
+
+    return eigens;
+}
+
+void mSVD3(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
+    assert(mat->rows == mat->cols && mat->rows == 3);
+
+    Matrix* at = mCreateTranspose(mat);
+
+    Matrix* ata = mMul(at, mat);
+    Matrix* aat = mMul(mat, at);
 }
