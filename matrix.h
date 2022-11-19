@@ -8,6 +8,7 @@ typedef struct Matrix {
     size_t cols;
 } Matrix;
 
+void mSetPrintNumberFormat(const char* str);
 Matrix* mCreate(size_t rows, size_t cols);
 Matrix* mIdentity(size_t size);
 void mFree(Matrix* matrix);
@@ -42,9 +43,12 @@ void mNormalize(Matrix* vec);
 
 float mCalcMaxEigenSymm(Matrix* mat);
 Matrix* mCalcEigVecSymm(Matrix* mat, float maxEig);
+Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x);
 
+void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v);
 
-Matrix* mCalcEigVecSymmetric(Matrix* mat);
-Matrix* mCalcEigensSymmetric3(Matrix* mat);
+// this might be specialized
+Matrix* mCalcEigVecSymmIterative(Matrix* mat);
+Matrix* mCalcEigensSymmetric3Cardano(Matrix* mat);
 
 void mSVD3(Matrix* mat, Matrix** u, Matrix** s, Matrix** v);
