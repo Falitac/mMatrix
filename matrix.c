@@ -370,15 +370,6 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
     }
     mRow(hermitianInv, 0)[0] *= -1.f;
 
-    puts("Eigenvec:");
-    mPrint(x);
-    puts("Hermitian:");
-    mPrint(hermitian);
-    puts("Mat:");
-    mPrint(mat);
-    puts("Hermitian inv:");
-    mPrint(hermitianInv);
-
     Matrix* m1 = mMul(hermitian, mat);
     Matrix* m2 = mMul(m1, hermitianInv);
 
@@ -395,23 +386,20 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
 }
 
 void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
-    *u = mCreate(mat->rows, mat->rows);
+    //*u = mCreate(mat->rows, mat->rows);
     *s = mCreate(mat->rows, mat->cols);
     *v = mCreate(mat->cols, mat->cols); // not entirely sure about dimemsions
 
     Matrix* transpose = mCreateTranspose(mat);
     Matrix* ata = mMul(transpose, mat);
+    mFree(transpose);
 
     Matrix* reduced = mCopy(ata);
     for(int i = 0; i < mat->cols; i++) {
-        printf("\nIter%i\n", i);
         float maxEig = mCalcMaxEigenSymm(reduced);
-        printf("Max Eig%i: %g\n", i, maxEig);
         mRow(*s, i)[i] = maxEig;
 
         Matrix* eigVec = mCalcEigVecSymm(reduced, maxEig);
-        printf("Eigen vector1:\n");
-        mPrint(eigVec);
 
         Matrix* tmp = mCalcEquivalentMinorMatrix(reduced, eigVec);
 
@@ -419,19 +407,30 @@ void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
         mFree(reduced);
         reduced = tmp;
         tmp = NULL;
-
-        printf("This is reduced mat\n");
-        mPrint(reduced);
     }
+    mFree(reduced);
 
-    puts("Finding eigenvectors for V");
     for(int i = 0; i < mat->cols; i++) {
         Matrix* eigVec = mCalcEigVecSymm(ata, mRow(*s, i)[i]);
         mNormalize(eigVec);
-        puts("Vec normalized:");
-        mPrint(eigVec);
+
+        for(int j = 0; j < eigVec->rows; j++) {
+            mRow(*v, j)[i] = mRow(eigVec, j)[0];
+        }
+        mRow(*s, i)[i] = sqrt(fabs(mRow(*s, i)[i]));
+        mFree(eigVec);
     }
-    mPrint(*s);
+
+    Matrix* matv = mMul(mat, *v);
+    Matrix* sInv = mCopy(*s);
+    for(int i = 0; i < sInv->cols; i++) {
+        mRow(sInv, i)[i] = 1. / mRow(*s, i)[i];
+    }
+    *u = mMul(matv, sInv);
+    mFree(matv);
+    mFree(sInv);
+
+    mFree(ata);
 }
 
 Matrix* mCalcEigVecSymmIterative(Matrix* mat) {
