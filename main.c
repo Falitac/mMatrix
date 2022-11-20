@@ -29,5 +29,6 @@ int main(int argc, char** argv) {
     Matrix* v = NULL;
     mSVD(a, &u, &s, &v);
 
+    puts("I am here, :3");
     return 0;
 }

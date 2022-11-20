@@ -314,7 +314,6 @@ float mCalcMaxEigenSymm(Matrix* mat) {
 
         float resultScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
         if(fabs(resultScalar - prevScalar) < 1e-7) {
-            printf("Stop at %d\n", i);
             break;
         }
         prevScalar = resultScalar;
@@ -371,6 +370,15 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
     }
     mRow(hermitianInv, 0)[0] *= -1.f;
 
+    puts("Eigenvec:");
+    mPrint(x);
+    puts("Hermitian:");
+    mPrint(hermitian);
+    puts("Mat:");
+    mPrint(mat);
+    puts("Hermitian inv:");
+    mPrint(hermitianInv);
+
     Matrix* m1 = mMul(hermitian, mat);
     Matrix* m2 = mMul(m1, hermitianInv);
 
@@ -387,42 +395,43 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
 }
 
 void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
+    *u = mCreate(mat->rows, mat->rows);
+    *s = mCreate(mat->rows, mat->cols);
     *v = mCreate(mat->cols, mat->cols); // not entirely sure about dimemsions
-    Matrix* transpose = mCreateTranspose(mat);
 
+    Matrix* transpose = mCreateTranspose(mat);
     Matrix* ata = mMul(transpose, mat);
 
-    // first iter
-    float maxEig = mCalcMaxEigenSymm(ata);
-    printf("Max Eig1: %g\n", maxEig);
+    Matrix* reduced = mCopy(ata);
+    for(int i = 0; i < mat->cols; i++) {
+        printf("\nIter%i\n", i);
+        float maxEig = mCalcMaxEigenSymm(reduced);
+        printf("Max Eig%i: %g\n", i, maxEig);
+        mRow(*s, i)[i] = maxEig;
 
-    Matrix* eigVec = mCalcEigVecSymm(ata, maxEig);
-    printf("Eigen vector1:\n");
-    mPrint(eigVec);
+        Matrix* eigVec = mCalcEigVecSymm(reduced, maxEig);
+        printf("Eigen vector1:\n");
+        mPrint(eigVec);
 
-    Matrix* lower = mCalcEquivalentMinorMatrix(ata, eigVec);
-    mPrint(lower);
-    // next part
+        Matrix* tmp = mCalcEquivalentMinorMatrix(reduced, eigVec);
 
-    maxEig = mCalcMaxEigenSymm(lower);
-    printf("Max Eig2: %g\n", maxEig);
+        mFree(eigVec);
+        mFree(reduced);
+        reduced = tmp;
+        tmp = NULL;
 
-    Matrix* eigVec2 = mCalcEigVecSymm(ata, maxEig);
-    printf("Eigen vector2:\n");
-    mPrint(eigVec2);
+        printf("This is reduced mat\n");
+        mPrint(reduced);
+    }
 
-    Matrix* lower2 = mCalcEquivalentMinorMatrix(lower, eigVec2);
-    puts("lower3:");
-    mPrint(lower2);
-
-    // who knows what will happen hereon
-
-    maxEig = mCalcMaxEigenSymm(lower2);
-    printf("Max Eig3: %g\n", maxEig);
-
-    Matrix* eigVec3 = mCalcEigVecSymm(ata, maxEig);
-    printf("Eigen vector3:\n");
-    mPrint(eigVec3);
+    puts("Finding eigenvectors for V");
+    for(int i = 0; i < mat->cols; i++) {
+        Matrix* eigVec = mCalcEigVecSymm(ata, mRow(*s, i)[i]);
+        mNormalize(eigVec);
+        puts("Vec normalized:");
+        mPrint(eigVec);
+    }
+    mPrint(*s);
 }
 
 Matrix* mCalcEigVecSymmIterative(Matrix* mat) {
