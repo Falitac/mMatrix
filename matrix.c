@@ -14,13 +14,11 @@ void mSetPrintNumberFormat(const char* str) {
     strncpy(G_M_FORMAT_BUFFER, str, len);
 }
 
-static void swap(float *xp, float *yp) {
-    float temp = *xp;
+static void swap(double *xp, double *yp) {
+    double temp = *xp;
     *xp = *yp;
     *yp = temp;
 }
-
-
  
 static Matrix* mAlloc(size_t rows, size_t cols) {
     if(rows == 0 || cols == 0) {
@@ -30,7 +28,7 @@ static Matrix* mAlloc(size_t rows, size_t cols) {
     if(!result) {
         return NULL;
     }
-    result->data = malloc(sizeof(float) * rows * cols);
+    result->data = malloc(sizeof(double) * rows * cols);
     if(!result->data) {
         free(result);
         return NULL;
@@ -68,11 +66,11 @@ void mFree(Matrix* matrix) {
 Matrix* mCopy(Matrix* matrix) {
     if(!matrix) return NULL;
     Matrix* result = mAlloc(matrix->rows, matrix->cols);
-    memcpy(result->data, matrix->data, sizeof(float) * matrix->rows * matrix->cols);
+    memcpy(result->data, matrix->data, sizeof(double) * matrix->rows * matrix->cols);
     return result;
 }
 
-void mFill(Matrix* mat, float val) {
+void mFill(Matrix* mat, double val) {
     if(!mat) return;
     for(int i = 0; i < mat->rows; i++) {
         for(int j = 0; j < mat->cols; j++) {
@@ -81,7 +79,7 @@ void mFill(Matrix* mat, float val) {
     }
 }
 
-void mGenerate(Matrix* mat, float (*generator)(Matrix* mat, int i, int j)) {
+void mGenerate(Matrix* mat, double (*generator)(Matrix* mat, int i, int j)) {
     if(!mat) return;
     for(int i = 0; i < mat->rows; i++) {
         for(int j = 0; j < mat->cols; j++) {
@@ -118,7 +116,7 @@ Matrix* mLoadFromFile(const char* filename) {
     return result;
 }
 
-float* mRow(Matrix* mat, size_t index) {
+double* mRow(Matrix* mat, size_t index) {
     return &mat->data[index * mat->cols];
 }
 
@@ -134,7 +132,7 @@ void mPrint(Matrix* mat) {
 
 int mIsClose(Matrix* m1, Matrix* m2) {
     assert(m1->cols == m2->cols && m1->rows == m2->rows);
-    const float EPS = 1e-7;
+    const double EPS = 1e-7;
     for(int i = 0; i < m1->cols * m1->cols; i++) {
         if(fabs(m1->data[i] - m2->data[i]) > EPS) {
             return 0;
@@ -162,7 +160,7 @@ Matrix* mCreateTranspose(Matrix* mat) {
     return result;
 }
 
-void mScale(Matrix* mat, float scalar) {
+void mScale(Matrix* mat, double scalar) {
     for(int i = 0; i < mat->rows; i++) {
         for(int j = 0; j < mat->cols; j++) {
             mRow(mat, j)[i] *= scalar;
@@ -203,7 +201,7 @@ void mMulFirst(Matrix** a, Matrix* b) {
 
 Matrix* mCreateMinor(Matrix* mat, int index1, int index2) {
     Matrix* result = mAlloc(mat->rows - 1, mat->cols - 1);
-    float* it = result->data;
+    double* it = result->data;
 
     for(int i = 0; i < mat->rows; i++) {
         for(int j = 0; j < mat->cols; j++) {
@@ -214,13 +212,13 @@ Matrix* mCreateMinor(Matrix* mat, int index1, int index2) {
     return result;
 }
 
-float mDet(Matrix* mat) {
+double mDet(Matrix* mat) {
     assert(mat->rows == mat->cols);
     if(mat->rows == 1) return mat->data[0];
 
-    float result = 0.f;
+    double result = 0.f;
     for(int i = 0; i < mat->cols; i++) {
-        float sign = (i&1) ? -1.f : 1.f;
+        double sign = (i&1) ? -1.f : 1.f;
         
         Matrix* minorMat = mCreateMinor(mat, 0, i);
         result += sign * mRow(mat, 0)[i] * mDet(minorMat);
@@ -232,14 +230,14 @@ float mDet(Matrix* mat) {
 void mSwapRows(Matrix* mat, int index1, int index2) {
     if(index1 == index2) return;
     for(int i = 0; i < mat->cols; i++) {
-        float tmp = mRow(mat, index1)[i];
+        double tmp = mRow(mat, index1)[i];
         mRow(mat, index1)[i] = mRow(mat, index2)[i];
         mRow(mat, index2)[i] = tmp;
     }
 }
 
 static int mFindMaxAbs(Matrix* mat, int index) {
-    float maxAbs = fabs(mRow(mat, index)[index]);
+    double maxAbs = fabs(mRow(mat, index)[index]);
     int maxIndex = index;
     for(int i = index + 1; i < mat->rows; i++) {
         if(fabs(mRow(mat, i)[index]) > maxAbs) {
@@ -258,7 +256,7 @@ void mReduceRows(Matrix* mat) {
     for(int i = 0; i < mat->rows - 1; i++) {
         mPivotRows(mat, i);
         for(int j = i + 1; j < mat->cols; j++) {
-            float coeff = mRow(mat, j)[i] / mRow(mat, i)[i];
+            double coeff = mRow(mat, j)[i] / mRow(mat, i)[i];
             for(int k = i; k < mat->cols; k++) {
                 mRow(mat, j)[k] -= coeff * mRow(mat, i)[k];
             }
@@ -266,17 +264,17 @@ void mReduceRows(Matrix* mat) {
     }
 }
 
-float mDiagonalProduct(Matrix* mat) {
+double mDiagonalProduct(Matrix* mat) {
     size_t lower = mat->rows < mat->cols ? mat->rows : mat->cols;
-    float result = 1.;
+    double result = 1.;
     for(int i = 0; i < lower; i++) {
         result *= mRow(mat, i)[i];
     }
     return result;
 }
 
-float mTrace(Matrix* mat) {
-    float result = 0.f;
+double mTrace(Matrix* mat) {
+    double result = 0.f;
 
     int lower = mat->rows < mat->cols ?  mat->rows : mat->cols;
     for(int i = 0; i < lower; i++) {
@@ -285,9 +283,9 @@ float mTrace(Matrix* mat) {
     return result;
 }
 
-float mDot(Matrix* vec1, Matrix* vec2) {
+double mDot(Matrix* vec1, Matrix* vec2) {
     assert(vec1->rows == vec2->rows && vec1->cols == vec2->cols);
-    float accum = 0.f;
+    double accum = 0.f;
     for(int i = 0; i < vec1->rows; i++) {
         accum += mRow(vec1, 0)[i] * mRow(vec2, 0)[i];
     }
@@ -296,23 +294,23 @@ float mDot(Matrix* vec1, Matrix* vec2) {
 
 void mNormalize(Matrix* vec) {
     assert(vec->cols == 1);
-    float accum = sqrt(mDot(vec, vec));
+    double accum = sqrt(mDot(vec, vec));
     mScale(vec, 1 / accum);
 }
 
-float mCalcMaxEigenSymm(Matrix* mat) {
+double mCalcMaxEigenSymm(Matrix* mat) {
     Matrix* result = mAlloc(mat->rows, 1);
     mFill(result, 1.);
 
     Matrix* v = mMul(mat, result);
-    float prevScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
+    double prevScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
     for(int i = 0; i < 20; i++) {
         Matrix* vTmp = mMul(mat, v);
         mFree(result);
         result = v;
         v = vTmp;
 
-        float resultScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
+        double resultScalar = mRow(v, 0)[0] / mRow(result, 0)[0];
         if(fabs(resultScalar - prevScalar) < 1e-7) {
             break;
         }
@@ -323,7 +321,7 @@ float mCalcMaxEigenSymm(Matrix* mat) {
     return prevScalar;
 }
 
-Matrix* mCalcEigVecSymm(Matrix* mat, float maxEig) {
+Matrix* mCalcEigVecSymm(Matrix* mat, double maxEig) {
     assert(mat->rows == mat->cols);
     Matrix* mat2 = mCopy(mat);
     for(int i = 0; i < mat2->rows; i++) {
@@ -331,14 +329,14 @@ Matrix* mCalcEigVecSymm(Matrix* mat, float maxEig) {
     }
 
     for(int i = 0; i < mat2->rows - 1; i++) {
-        float diag = mRow(mat2, i)[i];
+        double diag = mRow(mat2, i)[i];
         for(int j = i; j < mat2->cols; j++) {
             mRow(mat2, i)[j] /= diag;
         }
         for(int j = 0; j < mat2->rows; j++) {
             if(j == i)
                 continue;
-            float coeff = mRow(mat2, j)[i];
+            double coeff = mRow(mat2, j)[i];
             for(int k = 0; k < mat->cols; k++) {
                 mRow(mat2, j)[k] -= coeff * mRow(mat2, i)[k];
             }
@@ -360,7 +358,7 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
     Matrix* hermitian = mIdentity(mat->rows);
     Matrix* hermitianInv = mIdentity(mat->rows);
 
-    float x0Inv = mRow(hermitian, 0)[0] = 1. / mRow(x, 0)[0];
+    double x0Inv = mRow(hermitian, 0)[0] = 1. / mRow(x, 0)[0];
     for(int i = 1; i < hermitian->rows; i++) {
         mRow(hermitian, i)[0] = -mRow(x, i)[0] * x0Inv;
     }
@@ -385,10 +383,10 @@ Matrix* mCalcEquivalentMinorMatrix(Matrix* mat, Matrix* x) {
     return result;
 }
 
+// doesn't work for all matrices, now only 3x3
 void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
-    //*u = mCreate(mat->rows, mat->rows);
     *s = mCreate(mat->rows, mat->cols);
-    *v = mCreate(mat->cols, mat->cols); // not entirely sure about dimemsions
+    *v = mCreate(mat->cols, mat->cols);
 
     Matrix* transpose = mCreateTranspose(mat);
     Matrix* ata = mMul(transpose, mat);
@@ -396,7 +394,7 @@ void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
 
     Matrix* reduced = mCopy(ata);
     for(int i = 0; i < mat->cols; i++) {
-        float maxEig = mCalcMaxEigenSymm(reduced);
+        double maxEig = mCalcMaxEigenSymm(reduced);
         mRow(*s, i)[i] = maxEig;
 
         Matrix* eigVec = mCalcEigVecSymm(reduced, maxEig);
@@ -427,6 +425,9 @@ void mSVD(Matrix* mat, Matrix** u, Matrix** s, Matrix** v) {
         mRow(sInv, i)[i] = 1. / mRow(*s, i)[i];
     }
     *u = mMul(matv, sInv);
+    mRow(*u, 0)[2] = (mRow(*u, 1)[0] * mRow(*u, 2)[1] - mRow(*u, 2)[0] * mRow(*u, 1)[1]);
+    mRow(*u, 1)[2] = -(mRow(*u, 0)[0] * mRow(*u, 2)[1] - mRow(*u, 2)[0] * mRow(*u, 0)[1]);
+    mRow(*u, 2)[2] = -(mRow(*u, 0)[1] * mRow(*u, 1)[0] - mRow(*u, 0)[0] * mRow(*u, 1)[1]);
     mFree(matv);
     mFree(sInv);
 
@@ -461,7 +462,7 @@ Matrix* mCalcEigensSymmetric3Cardano(Matrix* mat) {
     
     Matrix* eigens = mAlloc(3, 1);
 
-    float p1 = mRow(mat, 0)[1] * mRow(mat, 0)[1]
+    double p1 = mRow(mat, 0)[1] * mRow(mat, 0)[1]
         + mRow(mat, 0)[2] * mRow(mat, 0)[2]
         + mRow(mat, 1)[2] * mRow(mat, 1)[2];
     if( p1 < 1e-7) {
@@ -470,32 +471,32 @@ Matrix* mCalcEigensSymmetric3Cardano(Matrix* mat) {
         mRow(eigens, 2)[2] = mRow(mat, 2)[2];
         return eigens;
     }
-    float q = mTrace(mat) / 3.;
+    double q = mTrace(mat) / 3.;
 
-    float x1 = mRow(mat, 0)[0] - q;
-    float x2 = mRow(mat, 1)[1] - q;
-    float x3 = mRow(mat, 2)[2] - q;
+    double x1 = mRow(mat, 0)[0] - q;
+    double x2 = mRow(mat, 1)[1] - q;
+    double x3 = mRow(mat, 2)[2] - q;
 
-    float p2 = x1*x1 + x2*x2 + x3*x3 + 2 * p1; 
-    float p = sqrt(p2 / 6.);
+    double p2 = x1*x1 + x2*x2 + x3*x3 + 2 * p1; 
+    double p = sqrt(p2 / 6.);
 
     Matrix* B = mCopy(mat);
     for(int i = 0; i < 3; i++) {
         mRow(B, i)[i] -= q;
     }
     mScale(B, 1. / p);
-    float r = mDet(B) / 2.;
+    double r = mDet(B) / 2.;
     mFree(B);
 
-    float phi = acos(r) / 3.;
+    double phi = acos(r) / 3.;
     if(r <= -1.) {
         phi = M_PI / 3.;
     } else if(r >= 1.) {
         phi = 0.;
     }
 
-    float eig1 = mRow(eigens, 0)[0] = q + 2. * p * cos(phi);
-    float eig3 = mRow(eigens, 2)[0] = q + 2. * p * cos(phi + (2. * M_PI / 3.));
+    double eig1 = mRow(eigens, 0)[0] = q + 2. * p * cos(phi);
+    double eig3 = mRow(eigens, 2)[0] = q + 2. * p * cos(phi + (2. * M_PI / 3.));
     mRow(eigens, 1)[0] = 3 * q - eig1 - eig3;
 
     if(mRow(eigens, 0)[0] < mRow(eigens, 1)[0]) {
